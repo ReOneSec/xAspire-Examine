@@ -32,30 +32,21 @@ export const generatePDF = (quiz: Quiz, attempt: ExtendedQuizAttempt) => {
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
   doc.text('Crafted with love by SAHABAJ', pageWidth / 2, 40, { align: 'center' });
+  
+  doc.setFont('helvetica', 'normal');
   doc.text('A product of Epplicon Technologies', pageWidth / 2, 45, { align: 'center' });
   
-  // Add aspirant details
-  let yPos = 55;
-  if (attempt.aspirantName || attempt.userId) {
+  // Add aspirant name if provided
+  if (attempt.aspirantName) {
     doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
-    
-    if (attempt.aspirantName) {
-      doc.text(`Name: ${attempt.aspirantName}`, 20, yPos);
-      yPos += 10;
-    }
-    
-    if (attempt.userId) {
-      doc.text(`User ID: ${attempt.userId}`, 20, yPos);
-      yPos += 10;
-    }
-    
+    doc.text(`Name: ${attempt.aspirantName}`, 20, 55);
     doc.setFont('helvetica', 'normal');
   }
   
   doc.setFontSize(18);
   doc.setFont('helvetica', 'bold');
-  doc.text(quiz.name, 20, yPos);
+  doc.text(quiz.name, 20, attempt.aspirantName ? 65 : 60);
   
   // Performance Metrics
   const timeTaken = attempt.endTime ? attempt.endTime - attempt.startTime : 0;
@@ -70,21 +61,21 @@ export const generatePDF = (quiz: Quiz, attempt: ExtendedQuizAttempt) => {
   const score = Math.round((correct / quiz.questions.length) * 100);
   
   // Results box
-  yPos += 10;
+  const resultsBoxY = attempt.aspirantName ? 75 : 70;
   doc.setDrawColor(70, 70, 200);
   doc.setFillColor(240, 240, 255);
-  doc.roundedRect(20, yPos, pageWidth - 40, 40, 3, 3, 'FD');
+  doc.roundedRect(20, resultsBoxY, pageWidth - 40, 40, 3, 3, 'FD');
   
   doc.setFontSize(12);
   doc.setTextColor(0, 0, 0);
-  doc.text('RESULT SUMMARY', pageWidth / 2, yPos + 10, { align: 'center' });
+  doc.text('RESULT SUMMARY', pageWidth / 2, resultsBoxY + 10, { align: 'center' });
   doc.setFontSize(10);
-  doc.text(`Time Taken: ${formattedTime}`, 30, yPos + 20);
-  doc.text(`Score: ${score}%`, pageWidth - 30, yPos + 20, { align: 'right' });
-  doc.text(`Total Questions: ${quiz.questions.length} | Attempted: ${attempted} | Correct: ${correct} | Wrong: ${wrong}`, 30, yPos + 30);
+  doc.text(`Time Taken: ${formattedTime}`, 30, resultsBoxY + 20);
+  doc.text(`Score: ${score}%`, pageWidth - 30, resultsBoxY + 20, { align: 'right' });
+  doc.text(`Total Questions: ${quiz.questions.length} | Attempted: ${attempted} | Correct: ${correct} | Wrong: ${wrong}`, 30, resultsBoxY + 30);
   
   // Questions
-  yPos += 60;
+  let yPos = resultsBoxY + 60;
   let pageCount = 1;
   
   quiz.questions.forEach((question, index) => {
@@ -124,6 +115,7 @@ export const generatePDF = (quiz: Quiz, attempt: ExtendedQuizAttempt) => {
       doc.setFontSize(10);
       doc.setFont('helvetica', isSelected ? 'bold' : 'normal');
       
+      // Option text color based on status
       if (isSelected) {
         doc.setTextColor(isCorrect ? 0 : 255, isCorrect ? 128 : 0, 0);
       } else if (optIndex === question.correctAnswer) {
@@ -138,7 +130,7 @@ export const generatePDF = (quiz: Quiz, attempt: ExtendedQuizAttempt) => {
       yPos += 6;
     });
     
-    // Explanation
+    // Always show explanation
     doc.setTextColor(70, 70, 200);
     doc.setFont('helvetica', 'italic');
     doc.setFontSize(9);

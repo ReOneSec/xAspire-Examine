@@ -27,19 +27,11 @@ export interface Quiz {
   questions: Question[];
 }
 
-export interface User {
-  id: string;
-  name: string;
-  email: string;
-  created_at: string;
-}
-
 export interface QuizAttempt {
   quizId: string;
   answers: Record<string, number>;
   startTime: number;
   endTime?: number;
   aspirantName?: string;
-  markedQuestions: string[];
-  userId?: string; // Optional user ID for registered users
+  markedQuestions: string[]; // Array of question IDs that are marked for review
 }

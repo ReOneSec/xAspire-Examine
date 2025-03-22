@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { Question, Quiz, QuizAttempt, Subject, QuizSet, User } from '../types';
+import { Question, Quiz, QuizAttempt, Subject, QuizSet } from '../types';
 import { supabase } from '../lib/supabase';
 
 interface QuizStore {
@@ -8,7 +8,6 @@ interface QuizStore {
   isAdmin: boolean;
   subjects: Subject[];
   quizSets: QuizSet[];
-  currentUser: User | null;
   setQuizzes: (quizzes: Quiz[]) => void;
   addQuiz: (quiz: Quiz) => Promise<void>;
   loadSubjects: () => Promise<void>;
@@ -19,8 +18,6 @@ interface QuizStore {
   checkAdminPassword: (password: string) => boolean;
   setAdmin: (status: boolean) => void;
   toggleMarkQuestion: (questionId: string) => void;
-  registerUser: (name: string, email: string) => Promise<User>;
-  setCurrentUser: (user: User | null) => void;
 }
 
 export const useQuizStore = create<QuizStore>((set, get) => ({
@@ -29,33 +26,10 @@ export const useQuizStore = create<QuizStore>((set, get) => ({
   isAdmin: false,
   subjects: [],
   quizSets: [],
-  currentUser: null,
 
   setQuizzes: (quizzes) => set({ quizzes }),
 
   setAdmin: (status) => set({ isAdmin: status }),
-
-  setCurrentUser: (user) => set({ currentUser: user }),
-
-  registerUser: async (name: string, email: string) => {
-    try {
-      const { data: user, error } = await supabase
-        .from('users')
-        .insert([{ name, email }])
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      if (!user) throw new Error('User registration failed');
-
-      set({ currentUser: user });
-      return user;
-    } catch (error) {
-      console.error('Error registering user:', error);
-      throw error;
-    }
-  },
 
   loadSubjects: async () => {
     const { data: subjects, error } = await supabase
@@ -134,14 +108,12 @@ export const useQuizStore = create<QuizStore>((set, get) => ({
   },
 
   startQuiz: (quizId) => {
-    const currentUser = get().currentUser;
     set({
       currentAttempt: {
         quizId,
         answers: {},
         startTime: Date.now(),
-        markedQuestions: [],
-        userId: currentUser?.id
+        markedQuestions: [] // Initialize empty array for marked questions
       }
     });
   },
